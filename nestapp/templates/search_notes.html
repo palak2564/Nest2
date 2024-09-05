@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Notes</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'searchnotes.css' %}">
+    <style>
+        /* Add your CSS styles here */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Include your navigation bar here -->
+        <nav>
+            <ul>
+                <li><a href="{% url 'landingpage' %}">Home</a></li>
+                <li><a href="{% url 'search_notes' %}">Search Notes</a></li>
+                <li><a href="{% url 'upload_note' %}">Upload Notes</a></li>
+                <!-- Add other navigation links -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Search Notes</h1>
+
+        <!-- Search Form -->
+        <form method="GET" action="{% url 'search_notes' %}" id="searchForm">
+            <input type="text" name="keyword" placeholder="Search notes..." value="{{ request.GET.keyword }}">
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Filters -->
+        <form method="GET" action="{% url 'search_notes' %}" id="filterForm">
+            <label for="branch">Branch:</label>
+            <select id="branch" name="branch" onchange="submitFilterForm()">
+                <option value="">All Branches</option>
+                {% for branch in branches %}
+                <option value="{{ branch }}" 
+                    {% if branch == request.GET.branch %}
+                        selected
+                    {% elif not request.GET.branch and branch == user.branch %}
+                        selected
+                    {% endif %}>
+                    {{ branch }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label for="semester">Semester:</label>
+            <select id="semester" name="semester" onchange="submitFilterForm()">
+                <option value="">All Semesters</option>
+                {% for semester in semesters %}
+                <option value="{{ semester }}" {% if semester|stringformat:"i" == request.GET.semester %}selected{% endif %}>
+                    Semester {{ semester }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <!-- Notes List -->
+        <div class="notes-list">
+            {% if notes %}
+                <ul>
+                    {% for note in notes %}
+                    <li>
+                        <img src="{{ note.cover_image.url }}" alt="{{ note.subject }}" style="max-height: 150px; width: auto; border-radius: 10px; margin-bottom: 15px;">
+                        <h2>{{ note.subject }}</h2>
+                        <p><strong>Branch:</strong> {{ note.branch }}</p>
+                        <p><strong>Semester:</strong> Semester {{ note.semester }}</p>
+                        <p><strong>Description:</strong> {{ note.description|truncatewords:15 }}</p>
+                        <button onclick="openModal('{{ note.file.url }}')">Preview</button>
+                        <a href="{{ note.file.url }}" download>Download Note</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No notes found.</p>
+            {% endif %}
+        </div>
+        
+    </main>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <iframe id="noteFrame" style="width: 100%; height: 80vh;" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <footer>
+        <!-- Include your footer here -->
+        <p>&copy; 2024 Your Company</p>
+    </footer>
+
+    <script>
+        function submitFilterForm() {
+            document.getElementById('filterForm').submit();
+        }
+
+        function openModal(url) {
+            document.getElementById('noteFrame').src = url;
+            document.getElementById('myModal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = "none";
+        }
+
+        // Close the modal when clicking outside of it
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('myModal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
