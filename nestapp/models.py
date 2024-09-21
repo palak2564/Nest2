@@ -42,6 +42,8 @@ class NestUser(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255)
     date_joined = models.DateTimeField(auto_now_add=True)
     branch = models.CharField(max_length=50, choices=BRANCH_CHOICES)
+    notes = models.ManyToManyField('Note', related_name='added_by_users')
+
     
     is_active = models.BooleanField(default=True)  # Needed for login
     is_staff = models.BooleanField(default=False)  # Needed for admin access
@@ -79,3 +81,11 @@ class Note(models.Model):
     def __str__(self):
         return self.subject
 
+
+class MyNotes(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)  # Use ForeignKey to relate to the Note model
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user} - {self.note.subject}'  # Access the subject of the related Note

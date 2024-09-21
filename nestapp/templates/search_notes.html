@@ -98,12 +98,13 @@
                 <ul>
                     {% for note in notes %}
                     <li>
-                        <img src="{{ note.cover_image.url }}" alt="{{ note.subject }}" style="max-height: 150px; width: auto; border-radius: 10px; margin-bottom: 15px;">
-                        <h2>{{ note.subject }}</h2>
-                        <p><strong>Branch:</strong> {{ note.branch }}</p>
-                        <p><strong>Semester:</strong> Semester {{ note.semester }}</p>
-                        <p><strong>Description:</strong> {{ note.description|truncatewords:15 }}</p>
-                        <button onclick="openModal('{{ note.file.url }}')">Preview</button>
+                        <a href="{% url 'view_note' note.id %}" class="note-card">
+                            <img src="{{ note.cover_image.url }}" alt="{{ note.subject }}" style="max-height: 150px; width: auto; border-radius: 10px; margin-bottom: 15px;">
+                            <h2>{{ note.subject }}</h2>
+                            <p><strong>Branch:</strong> {{ note.branch }}</p>
+                            <p><strong>Semester:</strong> Semester {{ note.semester }}</p>
+                            <p><strong>Description:</strong> {{ note.description|truncatewords:15 }}</p>
+                        </a>
                         <a href="{{ note.file.url }}" download>Download Note</a>
                     </li>
                     {% endfor %}

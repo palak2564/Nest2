@@ -27,3 +27,11 @@ class NoteAdmin(admin.ModelAdmin):
     def approve_notes(self, request, queryset):
         queryset.update(is_approved=True)
     approve_notes.short_description = "Approve selected notes"
+
+# admin.py
+from django.contrib import admin
+from .models import MyNotes
+
+@admin.register(MyNotes)
+class MyNotesAdmin(admin.ModelAdmin):
+    list_display = ('user', 'note', 'created_at')

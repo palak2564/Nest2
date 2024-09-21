@@ -1,0 +1,26 @@
+<!-- my_notes.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notes</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>My Notes</h1>
+        <ul>
+            {% for my_note in notes %}
+                <li>
+                    <a href="{{ my_note.note.file.url }}">{{ my_note.note.subject }}</a>
+                    <!-- Additional note details can be included here -->
+                </li>
+            {% empty %}
+                <li>No notes added yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

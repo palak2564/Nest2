@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'nestapp'
+    'nestapp',
 ]
 
 MIDDLEWARE = [
@@ -48,9 +48,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
+
 ROOT_URLCONF = 'nest2.urls'
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 TEMPLATES = [
     {
@@ -67,6 +73,11 @@ TEMPLATES = [
         },
     },
 ]
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'nestapp/static'),  # Update this path
+]
+
 
 WSGI_APPLICATION = 'nest2.wsgi.application'
 
@@ -141,6 +152,7 @@ LOGOUT_REDIRECT_URL = 'login/'
 # Add these lines to the bottom of your settings.py file
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # settings.py
