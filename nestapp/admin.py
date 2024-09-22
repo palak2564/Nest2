@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import NestUser, Note  # Combined import
 from django.urls import reverse
 from django.utils.html import format_html
+from .models import Badge
 
 
 # Admin for all NestUsers with filtering for superusers
@@ -52,3 +53,9 @@ from .models import MyNotes
 @admin.register(MyNotes)
 class MyNotesAdmin(admin.ModelAdmin):
     list_display = ('user', 'note', 'created_at')
+
+#ADMIN CAN VIEW BADGE
+@admin.register(Badge)
+class BadgeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'badge_type', 'awarded_at')
+    search_fields = ('user__username', 'badge_type')

@@ -119,4 +119,6 @@ def my_notes(request):
 def upvote_note(request, note_id):
     note = get_object_or_404(Note, id=note_id)
     Upvote.objects.get_or_create(user=request.user, note=note)
+     # Check if the note has 10 upvotes and award badge
+    note.check_and_award_badge()
     return redirect('view_note', note_id=note.id)
