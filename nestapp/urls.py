@@ -18,4 +18,5 @@ urlpatterns = [
     path('note/<int:note_id>/', views.view_note, name='view_note'),
     path('note/<int:note_id>/add/', views.add_to_my_notes, name='add_to_my_notes'),
     path('my_notes/', my_notes, name='my_notes'),
+    path('note/<int:note_id>/upvote/', views.upvote_note, name='upvote_note'),
 ]

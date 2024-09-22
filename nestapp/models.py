@@ -89,3 +89,14 @@ class MyNotes(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.note.subject}'  # Access the subject of the related Note
+
+
+class Upvote(models.Model):
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # note = models.ForeignKey(Note, on_delete=models.CASCADE)
+
+       user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+       note = models.ForeignKey(Note, on_delete=models.CASCADE)
+
+       class Meta:
+        unique_together = ('user', 'note') 
