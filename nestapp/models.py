@@ -96,12 +96,6 @@ class MyNotes(models.Model):
     def __str__(self):
         return f'{self.user} - {self.note.subject}'
 
-class Upvote(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    note = models.ForeignKey(Note, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('user', 'note')
 
 class PickupLocation(models.Model):
     name = models.CharField(max_length=100)
