@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">My Orders</h1>
+        {% if orders %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>File Name</th>
+                        <th>Number of Pages</th>
+                        <th>Color Option</th>  <!-- Added Color Option Column -->
+                        <th>Total Amount</th>  <!-- Added Total Amount Column -->
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.pdf_file.name }}</td>  <!-- Assuming pdf_file holds the uploaded file -->
+                            <td>{{ order.page_count }}</td>  <!-- Assuming page_count holds the number of pages -->
+                            <td>{{ order.color_option }}</td>  <!-- Displaying Color Option -->
+                            <td>{{ order.price|floatformat:2 }}</td>  <!-- Displaying Total Amount with 2 decimal points -->
+                            <td>{{ order.status }}</td>
+                            <td>
+                                <a href="{% url 'order_detail' order.id %}" class="btn btn-info">View Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No orders found.</p>
+        {% endif %}
+        <a href="{% url 'landingpage' %}" class="btn btn-primary">Go to Home</a>
+    </div>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

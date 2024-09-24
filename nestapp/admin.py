@@ -1,9 +1,8 @@
 from django.contrib import admin
-from .models import NestUser, Note  # Combined import
+from .models import NestUser, Note, Order, PrintPricing, PickupLocation, MyNotes
 from django.utils.html import format_html
 
-
-# Admin for all NestUsers with filtering for superusers
+# Admin for NestUsers
 @admin.register(NestUser)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'email', 'date_joined', 'is_superuser', 'is_staff')
@@ -18,7 +17,7 @@ class NoteAdmin(admin.ModelAdmin):
     actions = ['approve_notes']
 
     def view_note(self, obj):
-        if obj.file:  # Assuming the file field in the model is named 'document'
+        if obj.file:
             return format_html('<a href="{}" target="_blank">View Note</a>', obj.file.url)
         return "No document uploaded"
 
@@ -28,10 +27,20 @@ class NoteAdmin(admin.ModelAdmin):
         queryset.update(is_approved=True)
     approve_notes.short_description = "Approve selected notes"
 
-# admin.py
-from django.contrib import admin
-from .models import MyNotes
-
 @admin.register(MyNotes)
 class MyNotesAdmin(admin.ModelAdmin):
     list_display = ('user', 'note', 'created_at')
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('order_id', 'user', 'status', 'price', 'created_at')
+    list_filter = ('status', 'pickup_location')
+    search_fields = ('user__username', 'order_id')
+
+@admin.register(PrintPricing)
+class PrintPricingAdmin(admin.ModelAdmin):
+    list_display = ('black_and_white_price', 'color_price', 'fast_print_surcharge', 'delivery_surcharge', 'tax_rate')
+
+@admin.register(PickupLocation)
+class PickupLocationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address', 'open_time', 'close_time')

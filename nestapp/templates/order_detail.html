@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Order Details</h1>
+        <p><strong>Order ID:</strong> {{ order.id }}</p>
+        <p><strong>File Name:</strong> {{ order.file_name }}</p>
+        <p><strong>Number of Pages:</strong> {{ order.num_pages }}</p>
+        <p><strong>Status:</strong> {{ order.status }}</p>
+        <a href="{% url 'my_orders' %}" class="btn btn-primary">Back to My Orders</a>
+    </div>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

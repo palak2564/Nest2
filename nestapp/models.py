@@ -1,10 +1,7 @@
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
-
-
+import uuid
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -19,36 +16,27 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)  # Ensure the superuser is active
-        
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-        
+        extra_fields.setdefault('is_active', True)
+        if extra_fields.get('is_staff') is not True or extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_staff=True and is_superuser=True.')
         return self.create_user(username, email, password, **extra_fields)
-
 
 class NestUser(AbstractBaseUser, PermissionsMixin):
     BRANCH_CHOICES = [
         ('CSE', 'Computer Science Engineering'),
         ('ECE', 'Electronics and Communication Engineering'),
         ('ME', 'Mechanical Engineering'),
-        # Add other branches here
     ]
 
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
-    password = models.CharField(max_length=255)
-    date_joined = models.DateTimeField(auto_now_add=True)
     branch = models.CharField(max_length=50, choices=BRANCH_CHOICES)
+    date_joined = models.DateTimeField(auto_now_add=True)
     notes = models.ManyToManyField('Note', related_name='added_by_users')
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
 
-    
-    is_active = models.BooleanField(default=True)  # Needed for login
-    is_staff = models.BooleanField(default=False)  # Needed for admin access
-    is_superuser = models.BooleanField(default=False)  # Superuser status
-    
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
@@ -57,15 +45,11 @@ class NestUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
-
-
-
 class Note(models.Model):
     BRANCH_CHOICES = [
         ('CSE', 'Computer Science Engineering'),
         ('ECE', 'Electronics and Communication Engineering'),
         ('ME', 'Mechanical Engineering'),
-        # Add other branches here
     ]
     SEMESTER_CHOICES = [(i, f'Semester {i}') for i in range(1, 9)]
 
@@ -81,11 +65,80 @@ class Note(models.Model):
     def __str__(self):
         return self.subject
 
-
 class MyNotes(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    note = models.ForeignKey(Note, on_delete=models.CASCADE)  # Use ForeignKey to relate to the Note model
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.user} - {self.note.subject}'  # Access the subject of the related Note
+        return f'{self.user} - {self.note.subject}'
+
+class Upvote(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'note')
+
+class PickupLocation(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField()
+    open_time = models.TimeField()
+    close_time = models.TimeField()
+
+    def __str__(self):
+        return self.name
+
+class PrintPricing(models.Model):
+    black_and_white_price = models.DecimalField(max_digits=5, decimal_places=2, default=0.10)
+    color_price = models.DecimalField(max_digits=5, decimal_places=2, default=0.25)
+    fast_print_surcharge = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
+    delivery_surcharge = models.DecimalField(max_digits=5, decimal_places=2, default=2.00)
+    tax_rate = models.DecimalField(max_digits=4, decimal_places=2, default=0.05)
+
+    def __str__(self):
+        return "Current Pricing"
+
+class Order(models.Model):
+    COLOR_OPTIONS = [
+        ('bw', 'Black & White'),
+        ('color', 'Colored'),
+    ]
+    STATUS_OPTIONS = [
+        ('processing', 'Processing'),
+        ('ready', 'Ready for Pickup'),
+        ('completed', 'Completed'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pdf_file = models.FileField(upload_to='orders/')
+    page_count = models.IntegerField()
+    color_option = models.CharField(max_length=50, choices=COLOR_OPTIONS)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.SET_NULL, null=True)
+    file_type = models.CharField(max_length=50, blank=True , default='none')
+    fast_option = models.BooleanField(default=False)
+    delivery_option = models.BooleanField(default=False)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, choices=STATUS_OPTIONS, default='processing')
+    order_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def calculate_price(self):
+        pricing = PrintPricing.objects.last()
+        if self.color_option == 'bw':
+            price = pricing.black_and_white_price * self.page_count
+        elif self.color_option == 'color':
+            price = pricing.color_price * self.page_count
+        else:
+            # Handle mixed pricing separately
+            price = pricing.black_and_white_price * (self.page_count // 2) + pricing.color_price * (self.page_count // 2)
+        if self.fast_option:
+            price += pricing.fast_print_surcharge
+        if self.delivery_option:
+            price += pricing.delivery_surcharge
+        price += price * pricing.tax_rate
+        self.price = price
+        self.save()
+
+    def __str__(self):
+        return f"Order {self.order_id}"

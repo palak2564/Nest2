@@ -2,7 +2,12 @@ from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .forms import SignupForm, NoteUploadForm
-from .models import Note , MyNotes
+from .models import Note , MyNotes ,  Upvote , Order
+from django.shortcuts import render, redirect
+from .forms import PrintOrderForm
+from .models import Order, PrintPricing
+from PyPDF2 import PdfReader
+from django.core.files.storage import FileSystemStorage
 
 def landingpage(request):
     return render(request, 'index.html')
@@ -79,14 +84,17 @@ def view_note(request, note_id):
     
     # Check if the user has already added this note to "My Notes"
     added_to_my_notes = note in request.user.notes.all()  # Ensure you have a many-to-many relationship
-
+    upvote_count = note.upvote_set.count()
     # Build the full URL for the PDF file
     pdf_url = request.build_absolute_uri(note.file.url) if note.file else None
+    has_upvoted = note.upvote_set.filter(user=request.user).exists() if request.user.is_authenticated else False
 
     context = {
         'note': note,
         'added_to_my_notes': added_to_my_notes,
         'pdf_url': pdf_url,
+         'upvote_count': upvote_count,
+          'has_upvoted': has_upvoted,
     }
     return render(request, 'view_note.html', context)
 
@@ -110,3 +118,51 @@ def add_to_my_notes(request, note_id):
 def my_notes(request):
     notes = MyNotes.objects.filter(user=request.user)
     return render(request, 'my_notes.html', {'notes': notes})
+
+@login_required
+def upvote_note(request, note_id):
+    note = get_object_or_404(Note, id=note_id)
+    Upvote.objects.get_or_create(user=request.user, note=note)
+    return redirect('view_note', note_id=note.id)
+
+
+@login_required
+def order_printout(request):
+    if request.method == 'POST':
+        form = PrintOrderForm(request.POST, request.FILES)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.user = request.user
+
+            # Count pages in the PDF using the updated method
+            pdf = request.FILES['pdf_file']
+            pdf_reader = PdfReader(pdf)
+            order.page_count = len(pdf_reader.pages)  # Updated line
+
+            # Calculate price
+            order.calculate_price()
+
+            # Save the order
+            order.save()
+
+            return redirect('order_success')  # Redirect to success page
+    else:
+        form = PrintOrderForm()
+
+    return render(request, 'order_printout.html', {'form': form})
+
+
+
+# Add the order_success view if missing
+def order_success(request):
+    return render(request, 'order_success.html')
+
+@login_required
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user)
+    return render(request, 'my_orders.html', {'orders': orders})
+
+
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'order_detail.html', {'order': order})
