@@ -8,6 +8,8 @@ from .forms import PrintOrderForm
 from .models import Order, PrintPricing
 from PyPDF2 import PdfReader
 from django.core.files.storage import FileSystemStorage
+from .models import Note , MyNotes ,  Upvote
+
 
 def landingpage(request):
     return render(request, 'index.html')
@@ -166,3 +168,6 @@ def my_orders(request):
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'order_detail.html', {'order': order})
+     # Check if the note has 10 upvotes and award badge
+    note.check_and_award_badge()
+    return redirect('view_note', note_id=note.id)

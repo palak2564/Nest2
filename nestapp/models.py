@@ -3,6 +3,20 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 
+# BADGE_OPTION 
+# class Badge(models.Model):
+#     BADGE_TYPE_CHOICES = [
+#         ('upvoter', 'Upvote Master'),
+#         # Add more badges if needed
+#     ]
+#     user = models.ForeignKey(NestUser, on_delete=models.CASCADE, related_name="badges")
+#     badge_type = models.CharField(max_length=50, choices=BADGE_TYPE_CHOICES)
+#     awarded_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f'{self.user.username} - {self.badge_type}'
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
@@ -45,7 +59,10 @@ class NestUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
+
+
 class Note(models.Model):
+
     BRANCH_CHOICES = [
         ('CSE', 'Computer Science Engineering'),
         ('ECE', 'Electronics and Communication Engineering'),
@@ -61,6 +78,12 @@ class Note(models.Model):
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     is_approved = models.BooleanField(default=False)
     upload_date = models.DateTimeField(auto_now_add=True)
+
+    def check_and_award_badge(self):
+        """Check if this note has reached 1 upvotes and award a badge."""
+        upvote_count = self.upvote_set.count()
+        if upvote_count >= 0 and not Badge.objects.filter(user=self.uploaded_by, badge_type='upvoter').exists():
+            Badge.objects.create(user=self.uploaded_by, badge_type='upvoter')
 
     def __str__(self):
         return self.subject
@@ -142,3 +165,29 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.order_id}"
+        return f'{self.user} - {self.note.subject}'  # Access the subject of the related Note
+
+
+class Upvote(models.Model):
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # note = models.ForeignKey(Note, on_delete=models.CASCADE)
+
+       user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+       note = models.ForeignKey(Note, on_delete=models.CASCADE)
+
+       class Meta:
+        unique_together = ('user', 'note') 
+
+
+        # BADGE_OPTION 
+class Badge(models.Model):
+    BADGE_TYPE_CHOICES = [
+        ('upvoter', 'Upvote Master'),
+        # Add more badges if needed
+    ]
+    user = models.ForeignKey(NestUser, on_delete=models.CASCADE, related_name="badges")
+    badge_type = models.CharField(max_length=50, choices=BADGE_TYPE_CHOICES)
+    awarded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.badge_type}'
