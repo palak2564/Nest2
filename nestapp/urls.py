@@ -6,6 +6,9 @@ from . import views  # Import your own views
 from .views import upload_note_view , my_notes , my_orders , order_detail
 from django.contrib.auth.views import LoginView
 
+####
+from . import views
+
 
 urlpatterns = [
     path('', views.landingpage, name='landingpage'),
@@ -23,5 +26,6 @@ urlpatterns = [
     path('order_success/', views.order_success, name='order_success'),
     path('my_orders/', my_orders, name='my_orders'),
     path('order_detail/<int:order_id>/', order_detail, name='order_detail'),
+    path('search/', views.search_notes_view, name='search_notes'),
 ]
 
