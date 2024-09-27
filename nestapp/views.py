@@ -10,6 +10,12 @@ from PyPDF2 import PdfReader
 from django.core.files.storage import FileSystemStorage
 from .models import Note , MyNotes ,  Upvote
 
+###
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Note, MyNotes, Upvote, Comment  # Import Comment model
+from .forms import CommentForm  # Import CommentForm
+from django.shortcuts import render
 
 def landingpage(request):
     return render(request, 'index.html')
@@ -76,6 +82,7 @@ def search_notes_view(request):
         'notes': notes,
         'branches': branches,
         'semesters': semesters,
+        'keyword': keyword,
     }
 
     return render(request, 'search_notes.html', context)
@@ -171,3 +178,40 @@ def order_detail(request, order_id):
      # Check if the note has 10 upvotes and award badge
     note.check_and_award_badge()
     return redirect('view_note', note_id=note.id)
+
+###
+@login_required
+def view_note(request, note_id):
+    note = get_object_or_404(Note, id=note_id, is_approved=True)
+    
+    # Check if the user has already added this note to "My Notes"
+    added_to_my_notes = note in request.user.notes.all()
+    upvote_count = note.upvote_set.count()
+    has_upvoted = note.upvote_set.filter(user=request.user).exists() if request.user.is_authenticated else False
+
+    # Handle comment form submission
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.note = note
+            comment.user = request.user
+            comment.save()
+            return redirect('view_note', note_id=note.id)
+    else:
+        comment_form = CommentForm()
+
+    # Retrieve comments for the current note
+    comments = note.comments.filter(is_approved=True)
+
+    context = {
+        'note': note,
+        'added_to_my_notes': added_to_my_notes,
+        'pdf_url': request.build_absolute_uri(note.file.url) if note.file else None,
+        'upvote_count': upvote_count,
+        'has_upvoted': has_upvoted,
+        'comment_form': comment_form,
+        'comments': comments,
+    }
+    return render(request, 'view_note.html', context)
+

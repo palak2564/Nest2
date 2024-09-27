@@ -6,6 +6,10 @@ from django.urls import reverse
 from django.utils.html import format_html
 from .models import Badge
 
+###
+from .models import Comment
+
+
 # Admin for NestUsers
 @admin.register(NestUser)
 class UserAdmin(admin.ModelAdmin):
@@ -68,3 +72,22 @@ class PickupLocationAdmin(admin.ModelAdmin):
 class BadgeAdmin(admin.ModelAdmin):
     list_display = ('user', 'badge_type', 'awarded_at')
     search_fields = ('user__username', 'badge_type')
+
+
+###
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('note', 'user', 'created_at', 'is_approved')
+    search_fields = ('user__username', 'note__subject', 'content')
+    list_filter = ('is_approved', 'created_at')
+    actions = ['approve_comments', 'disapprove_comments']
+
+    def approve_comments(self, request, queryset):
+        queryset.update(is_approved=True)
+        self.message_user(request, "Selected comments have been approved.")
+    approve_comments.short_description = "Approve selected comments"
+
+    def disapprove_comments(self, request, queryset):
+        queryset.update(is_approved=False)
+        self.message_user(request, "Selected comments have been disapproved.")
+    disapprove_comments.short_description = "Disapprove selected comments"

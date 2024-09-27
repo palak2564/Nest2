@@ -1,5 +1,6 @@
 from django import forms
 from .models import NestUser, Note, Order, PickupLocation
+from .models import Comment
 
 class SignupForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput, help_text='Enter a strong password.')
@@ -67,3 +68,15 @@ class PrintOrderForm(forms.ModelForm):
         if not PickupLocation.objects.filter(id=pickup_location.id).exists():
             raise forms.ValidationError("Selected pickup location is not valid.")
         return pickup_location
+
+#new code
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {
+            'content': 'Add a comment'
+        }
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write your comment here...'})
+        }
