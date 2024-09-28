@@ -3,7 +3,7 @@ from django.conf import settings
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
-
+from django.contrib.auth.models import User
 # BADGE_OPTION 
 # class Badge(models.Model):
 #     BADGE_TYPE_CHOICES = [
@@ -205,15 +205,24 @@ class Badge(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.badge_type}'
 
-# Profile model for extended user details
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
-    
-    semester = models.IntegerField(null=True, blank=True) 
+    semester = models.IntegerField(null=True, blank=True)
     year = models.IntegerField(null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
 
     def __str__(self):
         return self.user.username
+
+# Comment model for user comments on notes
+class Comment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=True)  # To allow admins to approve/disapprove comments
+
+    def __str__(self):
+        return f"Comment by {self.user} on {self.note.subject}"
