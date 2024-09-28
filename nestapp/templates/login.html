@@ -7,7 +7,7 @@
 </head>
 <body>
     <h2>Login</h2>
-    <form method="POST">
+    <form method="POST" action="{% url 'login' %}">  <!-- Added action attribute -->
         {% csrf_token %}
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" required><br><br>
@@ -17,6 +17,10 @@
         
         <button type="submit">Login</button>
     </form>
+
+    {% if error %}  <!-- Optional error display -->
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
 
     <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
 </body>

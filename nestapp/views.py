@@ -8,7 +8,12 @@ from .forms import PrintOrderForm
 from .models import Order, PrintPricing
 from PyPDF2 import PdfReader
 from django.core.files.storage import FileSystemStorage
-from .models import Note , MyNotes ,  Upvote
+from .models import Note , MyNotes , Profile, Upvote
+from datetime import datetime
+from .models import Profile
+
+from .models import DownloadedNotes  # Import your model here
+
 
 
 def landingpage(request):
@@ -32,7 +37,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('landingpage')
+            return redirect('landingpage')  # Ensure this URL name is correct
         else:
             return render(request, 'login.html', {'error': 'Invalid username or password'})
     return render(request, 'login.html')
@@ -115,6 +120,11 @@ def add_to_my_notes(request, note_id):
     # Redirect back to the view_note page after adding the note
     return redirect('view_note', note_id=note.id)
 
+@login_required
+def downloaded_notes_view(request):
+    # Assuming you have a model or field to track downloaded notes
+    downloaded_notes = DownloadedNotes.objects.filter(user=request.user)
+    return render(request, 'downloaded_notes.html', {'downloaded_notes': downloaded_notes})
 
 @login_required
 def my_notes(request):
@@ -171,3 +181,66 @@ def order_detail(request, order_id):
      # Check if the note has 10 upvotes and award badge
     note.check_and_award_badge()
     return redirect('view_note', note_id=note.id)
+
+# Profile page view
+@login_required
+def profile_view(request):
+    user = request.user
+
+    # Ensure the user has a profile
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        # Handle form submission to update user and profile details
+        full_name = request.POST.get('full_name')
+        
+        # Default full name to username if empty
+        user.full_name = full_name if full_name else user.username
+
+        # Handle date of birth parsing to ensure correct format
+        dob_str = request.POST.get('dob')
+        if dob_str:
+            try:
+                user.dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+            except ValueError:
+                # Handle invalid date format
+                return render(request, 'profile.html', {
+                    'error': 'Invalid date format. Please use YYYY-MM-DD.',
+                    'full_name': user.full_name,
+                    'dob': dob_str,
+                    'semester': request.POST.get('semester'),
+                    'year': request.POST.get('year'),
+                    'branch': request.POST.get('branch'),
+                    'email': request.POST.get('email'),
+                    'bio': request.POST.get('bio'),
+                    'profile_picture': profile.profile_picture.url if profile.profile_picture else None,
+                })
+
+        user.semester = request.POST.get('semester')
+        user.year = request.POST.get('year')
+        user.branch = request.POST.get('branch')
+        user.email = request.POST.get('email')
+        user.save()
+
+        # Update profile-specific information
+        profile.bio = request.POST.get('bio')
+        profile_picture = request.FILES.get('profile_picture')
+        if profile_picture:
+            profile.profile_picture = profile_picture
+        profile.save()
+
+        return redirect('profile')
+
+    # Pre-fill form with user information and use username if full_name is missing
+    context = {
+        'full_name': user.full_name if user.full_name else user.username,
+        'dob': user.dob.strftime('%Y-%m-%d') if user.dob else '',
+        'semester': user.semester,
+        'year': user.year,
+        'branch': user.branch,
+        'email': user.email,
+        'bio': profile.bio,
+        'profile_picture': profile.profile_picture.url if profile.profile_picture else None,
+    }
+
+    return render(request, 'profile.html', context)

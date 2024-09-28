@@ -23,5 +23,8 @@ urlpatterns = [
     path('order_success/', views.order_success, name='order_success'),
     path('my_orders/', my_orders, name='my_orders'),
     path('order_detail/<int:order_id>/', order_detail, name='order_detail'),
+    path('profile/', views.profile_view, name='profile'), 
+    path('my_notes/', views.my_notes, name='my_notes'),
+    path('downloaded_notes/', views.downloaded_notes_view, name='downloaded_notes'),
 ]
 
