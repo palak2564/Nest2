@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 from django.contrib.auth.models import User
@@ -34,8 +35,10 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get('is_staff') is not True or extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_staff=True and is_superuser=True.')
         return self.create_user(username, email, password, **extra_fields)
-
 class NestUser(AbstractBaseUser, PermissionsMixin):
+    
+
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     BRANCH_CHOICES = [
         ('CSE', 'Computer Science Engineering'),
         ('ECE', 'Electronics and Communication Engineering'),
@@ -44,7 +47,13 @@ class NestUser(AbstractBaseUser, PermissionsMixin):
 
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
+    
+    # This is the new full_name field I added
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    dob = models.DateField(null=True, blank=True)
     branch = models.CharField(max_length=50, choices=BRANCH_CHOICES)
+    semester = models.IntegerField(null=True, blank=True) 
+    year = models.IntegerField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     notes = models.ManyToManyField('Note', related_name='added_by_users')
     is_active = models.BooleanField(default=True)
@@ -58,6 +67,7 @@ class NestUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
 
 
 
@@ -95,7 +105,16 @@ class MyNotes(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.note.subject}'
+class DownloadedNotes(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Use AUTH_USER_MODEL
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)  # Link to the Note model
+    
+    note_title = models.CharField(max_length=200)
+    file = models.FileField(upload_to='downloaded_notes/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.note_title
 
 class PickupLocation(models.Model):
     name = models.CharField(max_length=100)
@@ -186,7 +205,18 @@ class Badge(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.badge_type}'
 
-#new code
+class Profile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    bio = models.TextField(blank=True, null=True)
+    dob = models.DateField(null=True, blank=True)
+    semester = models.IntegerField(null=True, blank=True)
+    year = models.IntegerField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
+
+    def __str__(self):
+        return self.user.username
+
+# Comment model for user comments on notes
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='comments')
