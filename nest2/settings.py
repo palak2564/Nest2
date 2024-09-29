@@ -87,14 +87,12 @@ WSGI_APPLICATION = 'nest2.wsgi.application'
 
 DATABASES = {
     'default': {
-    # 'ENGINE': 'django.db.backends.postgresql',
-    # 'NAME': 'postgres',
-    # 'USER': 'masteruser',
-    # 'PASSWORD': '*Rbj132003',
-    # 'HOST': 'nest.cluster-cjy68qemoppy.eu-north-1.rds.amazonaws.com',  # Writer endpoint
-    # 'PORT': '5432'
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # This creates an SQLite database file in your project's base directory
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'nest',  # Replace with your MySQL database name
+        'USER': 'root',                # MySQL username
+        'PASSWORD': 'root',            # MySQL password
+        'HOST': 'localhost',           # Or your database host if remote
+        'PORT': '3306',                # Default MySQL port
     }
 }
 
