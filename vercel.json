@@ -9,7 +9,7 @@
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "Nest2/nest2/wsgi.py"
+        "dest": "nest2/wsgi.py"
       }
     ]
   }
